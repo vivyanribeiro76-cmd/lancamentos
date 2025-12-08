@@ -73,39 +73,35 @@ export function UploadPlanilha() {
 
       // Create upload record
       const filePath = `${session.user.id}/${Date.now()}-${file.name}`
-      // Upload file to storage
-      const upRes = await supabase.storage.from("planilhas").upload(filePath, file, { upsert: false })
+      // Upload file to storage (bucket gravacoes, pasta planilhas)
+      const storageFilePath = `planilhas/${Date.now()}-${file.name}`
+      const upRes = await supabase.storage.from("gravacoes").upload(storageFilePath, file, { upsert: false })
       if (upRes.error) throw upRes.error
 
       const { data: uploadInsert, error: upErr } = await supabase.from("uploads").insert({
         user_id: session.user.id,
         file_name: file.name,
-        file_url: upRes.data?.path || filePath,
-        total_contacts: total,
-        status: "uploaded"
+        file_path: storageFilePath,
+        file_url: storageFilePath,
       }).select("id").single()
       if (upErr) throw upErr
 
-      // Insert contacts in chunks
+      // Insert planilha data in chunks
       const chunkSize = 500
       for (let i=0;i<rows.length;i+=chunkSize){
         const chunk = rows.slice(i, i+chunkSize).map(r=>({
           upload_id: uploadInsert.id,
+          user_id: session.user.id,
           name: r.name,
           number: r.number,
           another_var: r.another_var,
-          email: r.email ?? null,
-          custom_data: null,
-          // phone is normalized by DB trigger
         }))
-        const { error } = await supabase.from("contacts").insert(chunk)
+        const { error } = await supabase.from("planilha_dados").insert(chunk)
         if (error) throw error
         setProgress(Math.round(((i+chunk.length)/rows.length)*100))
       }
 
-      // mark processing then completed (simples)
-      await supabase.from("uploads").update({ status: "processing" }).eq("id", uploadInsert.id)
-      await supabase.from("uploads").update({ status: "completed", processed_at: new Date().toISOString() }).eq("id", uploadInsert.id)
+      // Upload completed
 
       setHistory(prev=>[{ id: uploadInsert.id, file: file.name, total }, ...prev])
       setFile(null); setRows([]); setProgress(100)

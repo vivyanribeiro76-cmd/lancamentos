@@ -18,6 +18,9 @@ export default function GestorLayout({ children }: { children: React.ReactNode }
               <Link href="/gestor/recordings" className={pathname === '/gestor/recordings' ? 'font-semibold text-blue-600' : 'text-gray-600 hover:text-gray-900'}>
                 Gravações
               </Link>
+              <Link href="/gestor/dados" className={pathname === '/gestor/dados' ? 'font-semibold text-blue-600' : 'text-gray-600 hover:text-gray-900'}>
+                Dados
+              </Link>
             </nav>
           </div>
         </div>
