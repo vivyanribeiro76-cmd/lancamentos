@@ -22,7 +22,7 @@ export function UploadGravacoes() {
   }, [])
 
   const loadUploads = async () => {
-    const { data } = await supabase.from('uploads').select('id, file_name, uploaded_at').order('uploaded_at', { ascending: false }).limit(50)
+    const { data } = await supabase.from('uploads').select('id, file_name, created_at').order('created_at', { ascending: false }).limit(50)
     setUploads(data || [])
   }
 
@@ -83,7 +83,7 @@ export function UploadGravacoes() {
         <select value={selectedUploadId} onChange={e => setSelectedUploadId(e.target.value)} className="w-full border rounded px-3 py-2">
           <option value="">-- Escolha uma planilha --</option>
           {uploads.map(u => (
-            <option key={u.id} value={u.id}>{u.file_name} ({new Date(u.uploaded_at).toLocaleDateString()})</option>
+            <option key={u.id} value={u.id}>{u.file_name} ({new Date(u.created_at).toLocaleDateString()})</option>
           ))}
         </select>
       </div>
