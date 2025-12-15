@@ -13,6 +13,7 @@ interface UploadItem {
 export function UploadGravacoes() {
   const supabase = getSupabaseClient()
   const [uploads, setUploads] = useState<any[]>([])
+  const [uploadsError, setUploadsError] = useState<string | null>(null)
   const [selectedUploadId, setSelectedUploadId] = useState<string>("")
   const [files, setFiles] = useState<UploadItem[]>([])
   const [uploading, setUploading] = useState(false)
@@ -22,7 +23,20 @@ export function UploadGravacoes() {
   }, [])
 
   const loadUploads = async () => {
-    const { data } = await supabase.from('uploads').select('id, file_name, created_at').order('created_at', { ascending: false }).limit(50)
+    setUploadsError(null)
+    const { data, error } = await supabase
+      .from('uploads')
+      .select('id, file_name, created_at')
+      .order('created_at', { ascending: false })
+      .limit(50)
+
+    if (error) {
+      console.error('[UploadGravacoes] Erro ao carregar uploads:', error)
+      setUploads([])
+      setUploadsError(error.message)
+      return
+    }
+
     setUploads(data || [])
   }
 
@@ -86,6 +100,11 @@ export function UploadGravacoes() {
             <option key={u.id} value={u.id}>{u.file_name} ({new Date(u.created_at).toLocaleDateString()})</option>
           ))}
         </select>
+        {uploadsError && (
+          <div className="mt-2 text-sm text-red-600">
+            Erro ao carregar planilhas: {uploadsError}
+          </div>
+        )}
       </div>
 
       <div {...getRootProps()} className={`border-2 border-dashed rounded p-8 text-center cursor-pointer ${isDragActive ? 'bg-blue-50 border-blue-400' : 'bg-white'}`}>
